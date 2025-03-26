@@ -1,10 +1,10 @@
 # First Assigment of the course BOiL_AGH_summer_2025
 
 ## Authors
-Patryk Twardosz  
-Michał Ślęzak  
-Bartosz Pajda  
-Szymon Nowak  
+[Patryk Twardosz](https://github.com/Twarug)  
+[Michał Ślęzak](https://github.com/MSiorr)  
+[Bartosz Pajda](https://github.com/BPajda)  
+[Szymon Nowak](https://github.com/Szymon-Nowaq)  
 
 ## Description
 
