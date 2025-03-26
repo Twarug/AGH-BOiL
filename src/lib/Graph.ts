@@ -44,3 +44,54 @@ const convertGraphData = (data: CPM_Data[]): CPM_Graph => {
     nodes: nodes,
   };
 }
+
+// generate order that allows for calculating earliest start and finish times correctly
+const topologicalSort = (nodes: CPM_Node[]): number[] => {
+  const n = nodes.length;
+  const sorted: number[] = [];
+  const visited: boolean[] = new Array(n).fill(false);
+
+  const dfs = (node: number) => {
+    visited[node] = true;
+    nodes[node].successors.forEach(s => {
+      if (!visited[s]) dfs(s);
+    });
+    sorted.push(node);
+  }
+
+  for (let i = 0; i < n; i++) {
+    if (!visited[i]) dfs(i);
+  }
+
+  return sorted.reverse();
+}
+
+export const generate_CPM_graph = (data: CPM_Data[]): CPM_Graph => {
+  const graph = convertGraphData(data);
+  const n = graph.nodes.length;
+  // Sort nodes topologically
+  const sorted = topologicalSort(graph.nodes);
+
+  // Calculate earliest start and finish times
+  for (let i = 0; i < n; i++) {
+    const node = graph.nodes[sorted[i]];
+    node.es = node.predecessors.reduce((max, p) => Math.max(max, graph.nodes[p].ef), 0);
+    node.ef = node.es + node.duration;
+  }
+
+  const maxEF = Math.max(...graph.nodes.map(node => node.ef));
+  // Calculate latest start and finish times
+  for (let i = n - 1; i >= 0; i--) {
+    const node = graph.nodes[sorted[i]];
+    node.lf = node.successors.reduce((min, s) => Math.min(min, graph.nodes[s].ls), maxEF);
+    node.ls = node.lf - node.duration;
+  }
+
+  // Check for critical path
+  for (let i = 0; i < n; i++) {
+    const node = graph.nodes[sorted[i]];
+    node.critical = node.ef === node.lf;
+  }
+
+  return graph;
+}
