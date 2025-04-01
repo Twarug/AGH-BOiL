@@ -1,35 +1,35 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
-import {Button} from "@/components/ui/button.tsx";
+import { ThemeProvider } from './components/theme-provider';
+import CpmTable from './components/cpm-table.tsx'
+import { useState } from 'react';
+import { Switch } from './components/ui/switch.tsx';
+import { CPM_Data } from './lib/Graph.ts';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [isAOA, setIsAOA] = useState(false);
+
+  const onCreateCPM = (data: CPM_Data[]) => {
+    console.log(data);
+  }
 
   return (
-    <>Ś
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <ThemeProvider defaultTheme='dark' storageKey='vite-ui-theme'>
+      <div className="w-full flex justify-between">
+        <div>
+          <h1 className='text-2xl font-bold mb-2'>CPM Calculator</h1>
+          <div className='flex gap-4 items-center py-4'>
+            <p className='text-2xl'>AON</p>
+            <Switch checked={isAOA} onCheckedChange={setIsAOA}/>
+            <p className='text-2xl'>AOA</p>
+          </div>
+          <CpmTable isAOA={isAOA} onCreateCPM={onCreateCPM}/>
+        </div>
+        <div>
+          {/* Graph place */}
+          <p>Graph</p>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <Button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </Button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </ThemeProvider>
   )
 }
 
