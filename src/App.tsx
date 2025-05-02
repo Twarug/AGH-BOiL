@@ -5,18 +5,20 @@ import { useState } from 'react';
 import { Switch } from './components/ui/switch.tsx';
 import { CPM_Data, CPM_Graph, generate_CPM_graph } from './lib/Graph.ts';
 import CpmGraph from './components/cpm-graph.tsx';
-import { mockCpmGraph } from './lib/mock-cpm-data';
+import finalTable from './components/final-table.tsx';
+import { Button } from './components/ui/button.tsx';
 
 function App() {
   const [isAOA, setIsAOA] = useState(false);
+  const [dispTable, setDispTable] = useState(false);
   const [cpmResult, setCpmResult] = useState<CPM_Graph | null>(null);
 
   const onCreateCPM = (data: CPM_Data[]) => {
     console.log("Dane wejsciowe:", data);
     if(data && data.length > 0) {
       try {
-        const graph = mockCpmGraph; //mock to test graph generation
-        //const graph = generate_CPM_graph(data); // Uncomment this line to use the actual data
+        //const graph = mockCpmGraph; //mock to test graph generation
+        const graph = generate_CPM_graph(data); // Uncomment this line to use the actual data
         console.log("Wygenerowany graf:", graph);
         setCpmResult(graph);
       } catch (error) {
@@ -28,6 +30,10 @@ function App() {
       setCpmResult(null);
     }
   }
+
+  const onDisplayTable = () => {
+    setDispTable(true);
+  } 
 
   return (
     <ThemeProvider defaultTheme='dark' storageKey='vite-ui-theme'>
@@ -41,6 +47,9 @@ function App() {
             <p className='text-2xl'>AOA</p>
           </div>
           <CpmTable isAOA={isAOA} onCreateCPM={onCreateCPM}/>
+          {cpmResult && <div className='w-full flex justify-center mt-4'>
+             <Button type="button" className='mx-auto' onClick={onDisplayTable}>Show table</Button>
+          </div>}
         </div>
         {/* Right side - CPM graph */}
         <div className="flex-1 flex flex-col min-w-0 ml-6">
@@ -58,6 +67,7 @@ function App() {
             </div>
         </div>
       </div>
+      {dispTable && finalTable({data: cpmResult!, onClose: () => setDispTable(false)})}
     </ThemeProvider>
   )
 }
