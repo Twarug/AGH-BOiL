@@ -1,3 +1,5 @@
+"use client";
+
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -15,40 +17,35 @@ const createSchema = (isAOA: boolean) =>
       z.object({
         name: z.string().min(1, "Required"),
         duration: z.number().min(1, "Must be positive"),
-        ...(isAOA 
-          ? { 
-              successions: z
-                .string()
-                .min(1, "Required")
-                .regex(/^\d+-\d+$/, { 
-                  message: "Format must be <digit>-<digit> (e.g., '1-2')" 
-                }),
-              dependencies: z.array(z.number()).default([])
-            }
-          : { 
-            dependencies: z
-              .union([
-                z.string().transform((val) =>
-                  val
-                    .split(",")
-                    .map((num) => Number(num.trim())-1) // Tutaj daje -1, zeby indeksy się zgadzały
-                    .filter((num) => !isNaN(num) && num >= 0)
-                ),
-                z.number().transform((val) => [val]),
-                z.array(z.number()),
-              ])
-              .default([]),
-            successions: z.string().default(""),
-            }
-        )
+        ...(isAOA ? { 
+          successions: z.string()
+            .min(1, "Required")
+            .regex(/^\d+-\d+$/, { message: "Format must be <digit>-<digit> (e.g., '1-2')" }),
+          dependencies: z.string().default("")
+        } : { 
+          dependencies: z.string().optional().default(""),
+          successions: z.string().default(""),
+        })
       })
-    ),
+    )
+  }).superRefine((val, ctx) => {
+    const nameMap = new Map<string, number>();
+    val.data.forEach((item, index) => {
+      if (item.name && nameMap.has(item.name)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Task names must be unique",
+          path: ["data", index, "name"] 
+        });
+      }
+      nameMap.set(item.name, index);
+    });
   });
 
 type CPM_Table_Data = {
   name: string;
   duration: number;
-  dependencies: number[];
+  dependencies: string;
   successions: string;
 };
 
@@ -58,19 +55,20 @@ type CPMDataProps = {
 };
 
 export default function CPMTable({ isAOA, onCreateCPM }: CPMDataProps) {
+
   const {
     control,
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors }
   } = useForm({
     resolver: zodResolver(createSchema(isAOA)),
     defaultValues: { 
       data: [{ 
         name: "", 
         duration: 1, 
-        dependencies: [], 
+        dependencies: "", 
         successions: "" 
       }] 
     },
@@ -81,7 +79,7 @@ export default function CPMTable({ isAOA, onCreateCPM }: CPMDataProps) {
       data: [{ 
         name: "", 
         duration: 1, 
-        dependencies: [], 
+        dependencies: "", 
         successions: "" 
       }]
     });
@@ -92,9 +90,8 @@ export default function CPMTable({ isAOA, onCreateCPM }: CPMDataProps) {
     name: "data" 
   });
 
-  const onSubmit = (values: { data: CPM_Table_Data[] }) => {
-    console.log("siema");
-    const cpmData : CPM_Data[] = values.data.map(item => {
+  const parseToProperData = (data: CPM_Table_Data[]) => {
+    return data.map((item, _, array) => {
       if(isAOA){
         const [start, end] = item.successions.split("-").map(Number);
         return {
@@ -104,14 +101,28 @@ export default function CPMTable({ isAOA, onCreateCPM }: CPMDataProps) {
           successors: [end],
         };
       } else {
+        const dependencyNames = item.dependencies
+          ? item.dependencies.split(",").map(name => name.trim())
+          : [];
+    
+        const dependencyIds = dependencyNames
+          .map(name => array.findIndex(el => el.name === name))
+          .filter(id => id !== -1);
+    
         return {
           name: item.name,
           duration: item.duration,
-          dependencies: item.dependencies,
+          dependencies: dependencyIds,
           successors: [],
         };
       }
     });
+  }
+
+
+  const onSubmit = (values: { data: CPM_Table_Data[] }) => {
+    console.log('Validation errors:', errors)
+    const cpmData : CPM_Data[] = parseToProperData(values.data);
 
     if (onCreateCPM) {
       onCreateCPM(cpmData);
@@ -127,7 +138,7 @@ export default function CPMTable({ isAOA, onCreateCPM }: CPMDataProps) {
             <TableHead className="w-28 text-center">Name</TableHead>
             <TableHead className="w-20 text-center">Duration</TableHead>
             <TableHead className="w-40 text-center">
-              {isAOA ? "Successions (e.g., 1-2)" : "Dependencies (e.g., 1,2)"}
+              {isAOA ? "Successions (e.g., 1-2)" : "Dependencies (e.g., A,B)"}
             </TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -146,6 +157,7 @@ export default function CPMTable({ isAOA, onCreateCPM }: CPMDataProps) {
               <TableCell>
                 <Input
                   type="number"
+                  min={1}
                   {...register(`data.${index}.duration`, { valueAsNumber: true })}
                   placeholder="Duration"
                   className={errors.data?.[index]?.duration ? "border-destructive" : ""}
@@ -161,7 +173,7 @@ export default function CPMTable({ isAOA, onCreateCPM }: CPMDataProps) {
                 ) : (
                   <Input
                     {...register(`data.${index}.dependencies`)}
-                    placeholder="e.g., 1,2"          
+                    placeholder="e.g., A,B"          
                     className={errors.data?.[index]?.dependencies ? "border-destructive" : ""}          
                   />
                 )}
@@ -181,6 +193,17 @@ export default function CPMTable({ isAOA, onCreateCPM }: CPMDataProps) {
           ))}
         </TableBody>
         <TableFooter>
+          {
+            errors.data && 
+            (Array.isArray(errors.data) && 
+            errors.data.some((item) => item?.name?.message === "Task names must be unique") && (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-red-500 text-sm">
+                  Task names must be unique
+                </TableCell>
+              </TableRow>
+            )
+          )}
           <TableRow>
             <TableCell colSpan={5} className="text-center">
               <Button 
@@ -189,7 +212,7 @@ export default function CPMTable({ isAOA, onCreateCPM }: CPMDataProps) {
                 onClick={() => append({ 
                   name: "", 
                   duration: 1, 
-                  dependencies: [], 
+                  dependencies: "", 
                   successions: "" 
                 })}
               >
@@ -201,6 +224,7 @@ export default function CPMTable({ isAOA, onCreateCPM }: CPMDataProps) {
       </Table>
 
       <Button type="submit">Calculate CPM</Button>
+      
     </form>
   );
 }
