@@ -18,7 +18,7 @@ function App() {
     if(data && data.length > 0) {
       try {
         //const graph = mockCpmGraph; //mock to test graph generation
-        const graph = generate_CPM_graph(data); // Uncomment this line to use the actual data
+        const graph = generate_CPM_graph(data, isAOA ? "AOA" : "AON"); // Uncomment this line to use the actual data
         console.log("Wygenerowany graf:", graph);
         setCpmResult(graph);
       } catch (error) {

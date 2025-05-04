@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useCallback } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import ReactFlow, {
     ReactFlowProvider,
     Controls,
@@ -14,7 +14,7 @@ import ReactFlow, {
 import dagre from '@dagrejs/dagre';
 import 'reactflow/dist/style.css';
 import CpmNode from '@/components/cpm-node';
-import { CPM_Graph, CPM_Node } from '@/lib/Graph'; 
+import { CPM_Graph, CPM_Node } from '@/lib/Graph';
 type CpmNodeData = CPM_Node & { R: number };
 type RFNode = Node<CpmNodeData>;
 type RFEdge = Edge;
@@ -78,13 +78,23 @@ const LayoutFlow: React.FC<CpmGraphProps> = ({ graphData }) => {
         const transformedEdges: RFEdge[] = [];
         graphData.nodes.forEach((node) => {
             node.successors.forEach((successorId) => {
-                const targetNode = graphData.nodes.find(n => n.id === successorId);
-                const isCritical = node.critical && targetNode?.critical; // Krawędź jest krytyczna, jeśli oba węzły są krytyczne
+                const targetNode = graphData.nodes.find(n => n.id === successorId.index);
+                let isCritical = node.critical && targetNode?.critical; // Krawędź jest krytyczna, jeśli oba węzły są krytyczne
+
+                if (isCritical && graphData.type == 'AOA') {
+                   isCritical = node.ef + successorId.activity!.duration == targetNode?.es;
+                }
 
                 transformedEdges.push({
-                    id: `e-${node.id}-${successorId}`,
+                    id: `e-${node.id}-${successorId.index}`,
                     source: node.id.toString(),
-                    target: successorId.toString(),
+                    target: successorId.index.toString(),
+                    label: graphData.type == "AOA" ?
+                        `${successorId.activity!.name} | ${successorId.activity!.duration}` :
+                        undefined,
+                    labelBgStyle: {
+                        backgroundColor: 'none',
+                    },
                     style: {
                         strokeWidth: isCritical ? 2.5 : 1.5,
                         stroke: isCritical ? 'red' : '#aaa', 
@@ -120,21 +130,6 @@ const LayoutFlow: React.FC<CpmGraphProps> = ({ graphData }) => {
         }
     }, [initialNodes, initialEdges, setNodes, setEdges, fitView]);
 
-    // Callback do centrowania widoku (można podpiąć pod przycisk)
-    // const onLayout = useCallback(() => {
-    //     const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-    //         nodes,
-    //         edges,
-    //         'TB'
-    //     );
-    //     setNodes([...layoutedNodes]);
-    //     setEdges([...layoutedEdges]);
-    //     window.requestAnimationFrame(() => {
-    //         fitView({ padding: 0.1 });
-    //     });
-    // }, [nodes, edges, setNodes, setEdges, fitView]);
-
-
     return (
         <div style={{ height: '100%', width: '100%', border: '1px solid #444', background: '#1a1a1a' }}> {/* Dostosuj wysokość i styl */}
             <ReactFlow
@@ -142,7 +137,7 @@ const LayoutFlow: React.FC<CpmGraphProps> = ({ graphData }) => {
                 edges={edges}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
-                nodeTypes={nodeTypes} 
+                nodeTypes={nodeTypes}
                 fitView
                 fitViewOptions={{ padding: 0.1 }} 
                 proOptions={{ hideAttribution: true }} 

@@ -1,6 +1,7 @@
-import { CPM_Graph } from './Graph'; // Dostosuj ścieżkę importu, jeśli trzeba
+import {CPM_Graph} from './Graph'; // Dostosuj ścieżkę importu, jeśli trzeba
 
 export const mockCpmGraph: CPM_Graph = {
+    type: "AON",
     nodes: [
         {
             id: 0,
@@ -12,7 +13,7 @@ export const mockCpmGraph: CPM_Graph = {
             lf: 2,
             critical: true,
             predecessors: [],
-            successors: [1, 2],
+            successors: [{index: 1, }, {index: 2, }],
         },
         {
             id: 1,
@@ -24,7 +25,7 @@ export const mockCpmGraph: CPM_Graph = {
             lf: 7,
             critical: true,
             predecessors: [0],
-            successors: [3],
+            successors: [{index: 3, }],
         },
         {
             id: 2,
@@ -36,7 +37,7 @@ export const mockCpmGraph: CPM_Graph = {
             lf: 9,
             critical: false,
             predecessors: [0],
-            successors: [4],
+            successors: [{ index: 4, }],
         },
         {
             id: 3,
@@ -48,7 +49,7 @@ export const mockCpmGraph: CPM_Graph = {
             lf: 11,
             critical: true,
             predecessors: [1],
-            successors: [5],
+            successors: [{ index: 5, }],
         },
         {
             id: 4,
@@ -60,7 +61,7 @@ export const mockCpmGraph: CPM_Graph = {
             lf: 11,
             critical: false,
             predecessors: [2],
-            successors: [5],
+            successors: [{ index: 5, }],
         },
         {
             id: 5,
