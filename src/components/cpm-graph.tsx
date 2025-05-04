@@ -130,8 +130,47 @@ const LayoutFlow: React.FC<CpmGraphProps> = ({ graphData }) => {
         }
     }, [initialNodes, initialEdges, setNodes, setEdges, fitView]);
 
+    const MiniLegendKey = () => {
+        const cellClasses = 'border border-neutral-600/50 px-1.5 py-1 min-w-[40px] text-center'; 
+        const nodeClasses = `
+            w-44 rounded
+            text-xs
+            border border-neutral-600/50
+            bg-neutral-900/80
+            backdrop-blur-sm
+            text-neutral-300
+        `;
+        const nameCellFontSize = 'text-sm';
+
+        return (
+            
+            <div className="absolute bottom-4 right-4 z-10 pointer-events-none">
+                <div className={nodeClasses}>
+                    {/* Górny wiersz */}
+                    <div className="flex justify-between">
+                        <div className={cellClasses}>ES</div>
+                        <div className={`${cellClasses} font-semibold`}>T</div>
+                        <div className={cellClasses}>EF</div>
+                    </div>
+                    {/* Środkowy wiersz */}
+                    <div className="flex justify-between border-t border-b border-neutral-600/50">
+                        <div className={`${cellClasses} ${nameCellFontSize} flex-grow border-l-0 border-r-0 font-semibold`}>
+                            Nazwa/ID
+                        </div>
+                    </div>
+                    {/* Dolny wiersz */}
+                    <div className="flex justify-between">
+                        <div className={cellClasses}>LS</div>
+                        <div className={cellClasses}>R</div>
+                        <div className={cellClasses}>LF</div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     return (
-        <div style={{ height: '100%', width: '100%', border: '1px solid #444', background: '#1a1a1a' }}> {/* Dostosuj wysokość i styl */}
+        <div style={{ height: '100%', width: '100%', border: '1px solid #444', background: '#1a1a1a', position: 'relative' }}>
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -147,6 +186,7 @@ const LayoutFlow: React.FC<CpmGraphProps> = ({ graphData }) => {
                 {/* Można dodać przycisk do ponownego layoutu */}
                 {/* <button onClick={onLayout} style={{ position: 'absolute', top: 10, left: 10, zIndex: 4 }}>Recenter</button> */}
             </ReactFlow>
+            <MiniLegendKey />
         </div>
     );
 };

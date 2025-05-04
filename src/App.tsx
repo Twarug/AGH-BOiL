@@ -6,11 +6,14 @@ import { Switch } from './components/ui/switch.tsx';
 import { CPM_Data, CPM_Graph, generate_CPM_graph } from './lib/Graph.ts';
 import CpmGraph from './components/cpm-graph.tsx';
 import finalTable from './components/final-table.tsx';
+import LegendDialog from './components/legend-dialog.tsx';
 import { Button } from './components/ui/button.tsx';
+import { Info } from 'lucide-react';
 
 function App() {
   const [isAOA, setIsAOA] = useState(false);
   const [dispTable, setDispTable] = useState(false);
+  const [isLegendOpen, setIsLegendOpen] = useState(false);
   const [cpmResult, setCpmResult] = useState<CPM_Graph | null>(null);
 
   const onCreateCPM = (data: CPM_Data[]) => {
@@ -33,7 +36,8 @@ function App() {
 
   const onDisplayTable = () => {
     setDispTable(true);
-  } 
+  }
+   
 
   return (
     <ThemeProvider defaultTheme='dark' storageKey='vite-ui-theme'>
@@ -53,7 +57,20 @@ function App() {
         </div>
         {/* Right side - CPM graph */}
         <div className="flex-1 flex flex-col min-w-0 ml-6">
-            <h2 className='text-xl font-semibold mb-2 text-neutral-300'>Diagram CPM</h2>
+        <div className="flex justify-between items-center mb-2">
+              <h2 className='text-xl font-semibold text-neutral-300 flex-shrink-0'>Diagram CPM</h2>
+              {cpmResult && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => setIsLegendOpen(true)}
+                  className="flex items-center gap-1 px-2 py-1"
+                >
+                  <Info size={14} />
+                  Legenda
+                </Button>
+              )}
+            </div>
             <div className="flex-1 bg-neutral-800 rounded-lg border border-neutral-700 overflow-hidden">
                 {cpmResult ? (
                     <CpmGraph graphData={cpmResult} />
@@ -68,6 +85,7 @@ function App() {
         </div>
       </div>
       {dispTable && finalTable({data: cpmResult!, onClose: () => setDispTable(false)})}
+      {isLegendOpen && <LegendDialog onClose={() => setIsLegendOpen(false)} />}
     </ThemeProvider>
   )
 }
