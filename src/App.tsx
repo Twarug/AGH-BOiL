@@ -7,13 +7,15 @@ import { CPM_Data, CPM_Graph, generate_CPM_graph } from './lib/Graph.ts';
 import CpmGraph from './components/cpm-graph.tsx';
 import finalTable from './components/final-table.tsx';
 import LegendDialog from './components/legend-dialog.tsx';
+import GanttChartDialog from './components/gantt-chart-dialog.tsx'
 import { Button } from './components/ui/button.tsx';
-import { Info } from 'lucide-react';
+import { Info, BarChartHorizontal  } from 'lucide-react';
 
 function App() {
   const [isAOA, setIsAOA] = useState(false);
   const [dispTable, setDispTable] = useState(false);
   const [isLegendOpen, setIsLegendOpen] = useState(false);
+  const [isGanttOpen, setIsGanttOpen] = useState(false);
   const [cpmResult, setCpmResult] = useState<CPM_Graph | null>(null);
 
   const onCreateCPM = (data: CPM_Data[]) => {
@@ -60,6 +62,18 @@ function App() {
         <div className="flex justify-between items-center mb-2">
               <h2 className='text-xl font-semibold text-neutral-300 flex-shrink-0'>Diagram CPM</h2>
               {cpmResult && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => setIsGanttOpen(true)} // <-- Otwiera Gantta
+                    className="flex items-center gap-1 px-2 py-1"
+                    title="Pokaż wykres Gantta" // Tooltip
+                  >
+                    <BarChartHorizontal size={14} />
+                    Gantt
+                  </Button>
+                )}
+              {cpmResult && (
                 <Button
                   variant="default"
                   size="sm"
@@ -86,6 +100,7 @@ function App() {
       </div>
       {dispTable && finalTable({data: cpmResult!, onClose: () => setDispTable(false)})}
       {isLegendOpen && <LegendDialog onClose={() => setIsLegendOpen(false)} />}
+      {isGanttOpen && cpmResult && <GanttChartDialog data={cpmResult} onClose={() => setIsGanttOpen(false)} />}
     </ThemeProvider>
   )
 }
